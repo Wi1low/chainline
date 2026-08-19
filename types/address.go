@@ -5,6 +5,8 @@ import (
 	"fmt"
 )
 
+const a = iota
+
 type Address [20]uint8
 
 func (a Address) ToSlice() []byte {
