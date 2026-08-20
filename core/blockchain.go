@@ -1,5 +1,10 @@
 package core
 
+import (
+	"fmt"
+	"log/slog"
+)
+
 type Blockchain struct {
 	headers   []*Header
 	validator Validator
@@ -27,8 +32,16 @@ func (bc *Blockchain) AddBlock(b *Block) error {
 	if err := bc.validator.ValidateBlock(b); err != nil {
 		return err
 	}
-
+	slog.Info("adding new block",
+		slog.Any("block", b.Header),
+	)
 	return bc.addBlockWithoutValidator(b)
+}
+func (bc *Blockchain) GetHeader(height uint32) (*Header, error) {
+	if !bc.HasBlock(height) {
+		return nil, fmt.Errorf("given height (%d) too high", height)
+	}
+	return bc.headers[height], nil
 }
 func (bc *Blockchain) HasBlock(height uint32) bool {
 	return height <= bc.Height()

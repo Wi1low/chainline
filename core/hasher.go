@@ -12,11 +12,11 @@ type Hasher[T any] interface {
 
 // implements Hashers
 
-var BlockHasher Hasher[*Block] = &blockHasher{}
+var BlockHasher Hasher[*Header] = &blockHasher{}
 
 type blockHasher struct{}
 
-func (blockHasher) Hash(block *Block) types.Hash {
-	sha := sha256.Sum256(block.HeaderData())
+func (blockHasher) Hash(header *Header) types.Hash {
+	sha := sha256.Sum256(header.Bytes())
 	return types.Hash(sha)
 }

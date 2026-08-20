@@ -28,6 +28,24 @@ func randomBlock(height uint32) *Block {
 
 	return NewBlock(header, txs)
 }
+func randomBlockWithPreBlockHash(height uint32, prevBlockHash types.Hash) *Block {
+	header := &Header{
+		Version:       1,
+		PrevBlockHash: prevBlockHash,
+		Height:        height,
+		Timestamp:     time.Now().UnixNano(),
+	}
+	txs := []Transaction{
+		{
+			Data: []byte("test block1"),
+		},
+		{
+			Data: []byte("test block2"),
+		},
+	}
+
+	return NewBlock(header, txs)
+}
 func randomBlockWithSignature(t *testing.T, height uint32) *Block {
 	privkey := crypto.GeneratePrivateKey()
 
@@ -36,7 +54,16 @@ func randomBlockWithSignature(t *testing.T, height uint32) *Block {
 
 	return b
 }
+func randomBlockWithSignatureAndPrevBlockHash(t *testing.T, height uint32, prevBlockHash types.Hash) *Block {
+	privkey := crypto.GeneratePrivateKey()
 
+	b := randomBlockWithPreBlockHash(height, prevBlockHash)
+	tx := randomTxWithSignature(t)
+	b.AddTransaction(tx)
+	assert.Nil(t, b.Sign(privkey))
+
+	return b
+}
 func TestHashBlock(t *testing.T) {
 	b := randomBlock(0)
 	fmt.Printf("b.Hash(BlockHasher): %v\n", b.Hash(BlockHasher))
