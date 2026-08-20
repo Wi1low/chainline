@@ -12,7 +12,7 @@ type Hasher[T any] interface {
 
 // implements Hashers
 
-var BlockHasher = blockHasher{}
+var BlockHasher Hasher[*Block] = &blockHasher{}
 
 type blockHasher struct{}
 

@@ -13,6 +13,10 @@ func (h Hash) String() string {
 	// return fmt.Sprintf("%x", h[:])
 	return hex.EncodeToString(h.ToSlice())
 }
+
+// ToSlice converts the hash to a byte slice
+//
+// Note: this is a copy of the bytes
 func (h Hash) ToSlice() []byte {
 	return h[:]
 }
