@@ -1,6 +1,7 @@
 package core
 
 import (
+	"bytes"
 	"fmt"
 	"testing"
 
@@ -20,6 +21,17 @@ func TestSignTransaction(t *testing.T) {
 	assert.Nil(t, tx.Sign(privkey))
 
 	fmt.Printf("sign after: %+v\n", tx)
+}
+func TestTxEncodeDecode(t *testing.T) {
+	tx := randomTxWithSignature(t)
+	buf := &bytes.Buffer{}
+	assert.Nil(t, tx.Encode(NewGobTxEncoder(buf)))
+
+	txdec := new(Transaction)
+
+	assert.Nil(t, txdec.Decode(NewGobTxDecoder(buf)))
+
+	assert.Equal(t, tx, txdec)
 }
 func TestVerifyTransaction(t *testing.T) {
 	privkey := crypto.GeneratePrivateKey()

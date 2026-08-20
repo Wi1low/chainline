@@ -7,19 +7,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func newBlockchainWithGenesis(t *testing.T) *Blockchain {
-	bc, err := NewBlockchain(randomBlock(0), NewMemoryStore())
-	assert.Nil(t, err)
-
-	return bc
-}
-func getPrevBlockHash(t *testing.T, bc *Blockchain, height uint32) types.Hash {
-	prevHeader, err := bc.GetHeader(height - 1)
-	assert.Nil(t, err)
-
-	return BlockHasher.Hash(prevHeader)
-}
-
 // TestAddBlock 是一个测试函数，用于测试区块链添加区块的功能
 func TestAddBlock(t *testing.T) {
 	bc := newBlockchainWithGenesis(t)
@@ -72,4 +59,17 @@ func TestHasBlock(t *testing.T) {
 
 	assert.False(t, bc.HasBlock(1))
 	assert.True(t, bc.HasBlock(0))
+}
+
+func newBlockchainWithGenesis(t *testing.T) *Blockchain {
+	bc, err := NewBlockchain(randomBlock(0), NewMemoryStore())
+	assert.Nil(t, err)
+
+	return bc
+}
+func getPrevBlockHash(t *testing.T, bc *Blockchain, height uint32) types.Hash {
+	prevHeader, err := bc.GetHeader(height - 1)
+	assert.Nil(t, err)
+
+	return BlockHasher.Hash(prevHeader)
 }

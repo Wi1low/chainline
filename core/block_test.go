@@ -17,16 +17,8 @@ func randomBlock(height uint32) *Block {
 		Height:        height,
 		Timestamp:     time.Now().UnixNano(),
 	}
-	txs := []Transaction{
-		{
-			Data: []byte("test block1"),
-		},
-		{
-			Data: []byte("test block2"),
-		},
-	}
 
-	return NewBlock(header, txs)
+	return NewBlock(header, nil)
 }
 func randomBlockWithPreBlockHash(height uint32, prevBlockHash types.Hash) *Block {
 	header := &Header{
@@ -35,16 +27,8 @@ func randomBlockWithPreBlockHash(height uint32, prevBlockHash types.Hash) *Block
 		Height:        height,
 		Timestamp:     time.Now().UnixNano(),
 	}
-	txs := []Transaction{
-		{
-			Data: []byte("test block1"),
-		},
-		{
-			Data: []byte("test block2"),
-		},
-	}
 
-	return NewBlock(header, txs)
+	return NewBlock(header, nil)
 }
 func randomBlockWithSignature(t *testing.T, height uint32) *Block {
 	privkey := crypto.GeneratePrivateKey()
@@ -80,8 +64,16 @@ func TestVerifyBlock(t *testing.T) {
 	privkey := crypto.GeneratePrivateKey()
 	// original
 	b := randomBlock(0)
-	assert.Nil(t, b.Sign(privkey))
+	tx := &Transaction{
+		Data: []byte("hello world"),
+	}
+	tx.Sign(privkey)
+	b.AddTransaction(tx)
 
+	fmt.Printf("sign tx: %+v\n", tx)
+	fmt.Printf("tx.Signature: %v\n", tx.Signature)
+
+	assert.Nil(t, b.Sign(privkey))
 	assert.Nil(t, b.Verify())
 
 	// modify the public key
@@ -98,5 +90,6 @@ func TestVerifyBlock(t *testing.T) {
 	// 只有原来的秘钥才能验证数据
 	// original
 	b.Validator = privkey.PublicKey()
+	b.Height = 0
 	assert.Nil(t, b.Verify())
 }

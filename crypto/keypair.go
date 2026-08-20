@@ -5,21 +5,22 @@ import (
 	"crypto/elliptic"
 	"crypto/rand"
 	"crypto/sha256"
+	"fmt"
 	"math/big"
 
 	"github.com/Wi1low/chainline/types"
 )
 
 type PrivateKey struct {
-	key *ecdsa.PrivateKey
+	Key *ecdsa.PrivateKey
 }
 
 func (k PrivateKey) Sign(data []byte) (*Signature, error) {
-	r, s, err := ecdsa.Sign(rand.Reader, k.key, data)
+	r, s, err := ecdsa.Sign(rand.Reader, k.Key, data)
 	if err != nil {
 		return nil, err
 	}
-	return &Signature{r: r, s: s}, nil
+	return &Signature{R: r, S: s}, nil
 }
 
 func GeneratePrivateKey() PrivateKey {
@@ -28,19 +29,19 @@ func GeneratePrivateKey() PrivateKey {
 	if err != nil {
 		panic(err)
 	}
-	return PrivateKey{key: key}
+	return PrivateKey{Key: key}
 }
 func (k PrivateKey) PublicKey() PublicKey {
-	return PublicKey{key: &k.key.PublicKey}
+	return PublicKey{Key: &k.Key.PublicKey}
 }
 
 type PublicKey struct {
-	key *ecdsa.PublicKey
+	Key *ecdsa.PublicKey
 }
 
 func (k PublicKey) ToSlice() []byte {
 	// ecdh.(k.key.Curve, k.key.X, k.key.Y)
-	return elliptic.MarshalCompressed(k.key.Curve, k.key.X, k.key.Y)
+	return elliptic.MarshalCompressed(k.Key.Curve, k.Key.X, k.Key.Y)
 }
 
 func (k PublicKey) Address() types.Address {
@@ -51,10 +52,27 @@ func (k PublicKey) Address() types.Address {
 	return types.AddressFromBytes(h[len(h)-20:])
 }
 
+// GobEncode serializes the public key as a compressed point so that gob does
+// not need to encode the elliptic.Curve field (which has no exported fields).
+func (k PublicKey) GobEncode() ([]byte, error) {
+	return elliptic.MarshalCompressed(k.Key.Curve, k.Key.X, k.Key.Y), nil
+}
+
+// GobDecode reconstructs the public key from a compressed point.
+func (k *PublicKey) GobDecode(data []byte) error {
+	curve := elliptic.P256()
+	x, y := elliptic.UnmarshalCompressed(curve, data)
+	if x == nil {
+		return fmt.Errorf("invalid public key data")
+	}
+	k.Key = &ecdsa.PublicKey{Curve: curve, X: x, Y: y}
+	return nil
+}
+
 type Signature struct {
-	r, s *big.Int
+	R, S *big.Int
 }
 
 func (sig Signature) Verify(pubKey PublicKey, data []byte) bool {
-	return ecdsa.Verify(pubKey.key, data, sig.r, sig.s)
+	return ecdsa.Verify(pubKey.Key, data, sig.R, sig.S)
 }
