@@ -1,6 +1,7 @@
 package network
 
 import (
+	"bytes"
 	"fmt"
 	"sync"
 )
@@ -30,6 +31,15 @@ func (lt *LocalTransport) Connect(peer Transport) error {
 	lt.peers[peer.Addr()] = peer.(*LocalTransport)
 	return nil
 }
+func (lt *LocalTransport) Broadcast(msg []byte) error {
+	for _, peer := range lt.peers {
+		if err := lt.SendMsg(peer.Addr(), msg); err != nil {
+			return err
+		}
+
+	}
+	return nil
+}
 func (lt *LocalTransport) SendMsg(to NetAddr, msg []byte) error {
 	lt.lock.RLock()
 	defer lt.lock.RUnlock()
@@ -41,7 +51,7 @@ func (lt *LocalTransport) SendMsg(to NetAddr, msg []byte) error {
 
 	peer.consumeCh <- RPC{
 		From:    lt.addr,
-		Payload: msg,
+		Payload: bytes.NewReader(msg),
 	}
 	return nil
 }
